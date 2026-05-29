@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Bienvenido a MasQueWaffles</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: url('URL_DE_TU_IMAGEN') no-repeat center center fixed;
+            background-size: cover;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        .overlay {
+            background-color: rgba(255, 255, 255, 0.85);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        .container { max-width: 900px; margin: auto; padding: 20px; }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 15px;
+        }
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: url('URL_DE_TU_LOGO') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            background-color: #FF9800;
+            color: white;
+        }
+        .nombre-negocio {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+        .bienvenida {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        h2 { text-align: center; margin-bottom: 20px; }
+        .vista { display: none; }
+        .vista.activa { display: block; }
+        nav { text-align: center; margin-bottom: 20px; }
+        nav button { padding: 12px 25px; margin: 5px; font-size: 18px; cursor: pointer; border: none; border-radius: 10px; }
+        .btn-caja { background: #4CAF50; color: white; }
+        .btn-cocina { background: #2196F3; color: white; }
+
+        .productos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .producto-card { background: white; border: 3px solid transparent; border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
+        .producto-card:hover { border-color: #FF9800; }
+        .producto-card.seleccionado { border-color: #FF9800; background: #FFF3E0; }
+        .emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+        .producto-nombre { font-size: 18px; font-weight: bold; }
+
+        .variaciones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .variacion-btn { padding: 12px; background: white; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 16px; }
+        .variacion-btn.seleccionado { border-color: #4CAF50; background: #E8F5E9; }
+
+        .cantidad-notas { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .cantidad-notas input, .cantidad-notas textarea { padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+        .cantidad-notas input { width: 80px; }
+        .cantidad-notas textarea { flex: 1; }
+
+        .orden-actual { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .item button { background: #f44336; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
+
+        .btn-finalizar { background: #4CAF50; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 18px; width: 100%; cursor: pointer; }
+
+        /* Cocina */
+        .pedido-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .pedido-item .info { flex-grow: 1; }
+        .pedido-item .numero { font-size: 1.2em; font-weight: bold; color: #FF5722; }
+        .pedido-item .notas-aviso { background: #FFF3E0; border-left: 4px solid #FF9800; padding: 5px 10px; margin-top: 5px; font-style: italic; }
+        .estado-badge { padding: 3px 8px; border-radius: 5px; font-size: 0.8em; font-weight: bold; }
+        .estado-pendiente { background: #FFE0B2; color: #E65100; }
+        .estado-en-preparacion { background: #BBDEFB; color: #0D47A1; }
+        .botones-accion { display: flex; gap: 5px; }
+        .btn-preparacion { background: #2196F3; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; }
+        .btn-listo { background: #f44336; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; }
+
+        .paso-titulo { margin: 10px 0 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="overlay">
+    <div class="container">
+        <div class="header">
+            <div class="logo" id="logo-container">🍽️</div>
+            <span class="nombre-negocio">Bienvenido a MasQueWaffles</span>
+        </div>
+        <div class="bienvenida">¡Bienvenido! Selecciona tus productos</div>
+
+        <nav>
+            <button class="btn-caja" onclick="mostrarVista('caja')">Caja</button>
+            <button class="btn-cocina" onclick="mostrarVista('cocina')">Cocina</button>
+        </nav>
+
+        <!-- Vista Caja -->
+        <div id="caja" class="vista activa">
+            <h2>Selecciona el producto</h2>
+            <div class="productos-grid" id="productos-grid"></div>
+
+            <div id="variaciones-container" style="display:none;">
+                <h3>Elige la variación</h3>
+                <div class="variaciones-grid" id="variaciones-grid"></div>
+            </div>
+
+            <div id="crepas-container" style="display:none;">
+                <h3>Arma tu crepa personalizada</h3>
+                <div id="paso-sabor">
+                    <div class="paso-titulo">1. Sabor</div>
+                    <div class="variaciones-grid" id="sabores-grid"></div>
+                </div>
+                <div id="paso-fruta" style="display:none;">
+                    <div class="paso-titulo">2. Fruta</div>
+                    <div class="variaciones-grid" id="frutas-grid"></div>
+                </div>
+                <div id="paso-topping" style="display:none;">
+                    <div class="paso-titulo">3. Topping</div>
+                    <div class="variaciones-grid" id="toppings-grid"></div>
+                </div>
+            </div>
+
+            <div class="cantidad-notas" style="display:none;" id="cantidad-notas-container">
+                <input type="number" id="cantidad" min="1" value="1">
+                <textarea id="notas" rows="1" placeholder="Notas (ej. sin cebolla)"></textarea>
+                <button onclick="agregarItem()" style="padding:12px; background:#FF9800; color:white; border:none; border-radius:10px;">Agregar</button>
+            </div>
+
+            <div class="orden-actual" id="orden-actual">
+                <h3>Orden actual</h3>
+                <div id="items-orden">No hay productos</div>
+            </div>
+
+            <button class="btn-finalizar" id="btn-finalizar" onclick="finalizarPedido()">Finalizar Pedido y Enviar a Cocina</button>
+        </div>
+
+        <!-- Vista Cocina -->
+        <div id="cocina" class="vista">
+            <h2>Pedidos Activos</h2>
+            <ul id="lista-pedidos"></ul>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ================== CONFIGURACIÓN DE SUPABASE ==================
+        const SUPABASE_URL = 'https://ubhufzcneahmzaeiqxpv.supabase.co';  // ¡SIN /rest/v1/!
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViaHVmemNuZWFobXphZWlxeHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMTQxNjksImV4cCI6MjA5NTU5MDE2OX0.H-8xXuzGuTByw-aeRQUaKoCZCpQqVABWmrY6SQNVgs8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ================== CONFIGURACIÓN DE TU MENÚ ==================
+        const menu = [
+            { nombre: "Alitas", emoji: "🪽", variaciones: ["BBQ", "Mango Habanero", "Habanero", "Buffalo Classica", "Buffalo Spicy"] },
+            { nombre: "Boneless", emoji: "🥟", variaciones: ["BBQ", "Mango Habanero", "Habanero", "Buffalo Classica", "Buffalo Spicy"] },
+            { nombre: "Hamburguesa", emoji: "🍔", variaciones: ["Clásica", "BBQ", "Hawaiana", "Pollo", "Mango Habanero", "Buffalo","DE LA CASA","COMPLETA","DOBLE"] },
+            { nombre: "Hot Dog", emoji: "🌭", variaciones: ["Sencilla", "Especial", "Ranchero"] },
+            { nombre: "Salchipulpos", emoji: "🐙", variaciones: [] },
+            { nombre: "Papas", emoji: "🍟", variaciones: ["Normal (francesa)", "Salchipapas"] },
+            { nombre: "Dedos de Queso", emoji: "🥖", variaciones: [] },
+            { nombre: "Nuguets", emoji: "🥐", variaciones: [] },
+            { nombre: "Aros de Cebolla", emoji: "🧅", variaciones: [] },
+            { nombre: "Soda Italiana", emoji: "🍹", variaciones: ["Mora Azul", "Limon"] },
+            { nombre: "Sincronizadas", emoji: "🌮", variaciones: [] },
+            { nombre: "Ramen/Sopa Maruchan", emoji: "🍲", variaciones: ["Sopa maruchan", "Buldak(Ramen)"] },
+            { 
+                nombre: "Crepas", 
+                emoji: "🥞", 
+                tipo: "crepas",
+                especiales: ["Gansito", "Fresas con Crema","Ferrero Rocher", "Kinder Delice", "Oreo", "Pay de limon"],
+                sabores: ["Fresa", "Nutella", "Merm.Fresa", "Merm.Zarzamora", "Lechera", "Cajeta", "Philadelphia"],
+                frutas: ["Plátano", "Fresas", "Mango", "Sin fruta"],
+                toppings: ["Nuez", "Chispas Chocolate", "Almendras", "Sin topping"]
+            },
+            { nombre: "Frappes", emoji: "🧋", variaciones: ["Fresas con crema", "Oreo", "Algodon de Azucar", "Mazapan", "Moka", "Cafe", "Choco avellana"] },
+            { nombre: "Malteadas", emoji: "🥤", variaciones: ["Fresa", "Chocolate", "Vainilla"] },
+            { nombre: "Jelly Coffe", emoji: "🥛", variaciones: ["Oreo", "Fresas con crema", "Red Velvet","Mazapan","Coco","Choco Avellana"] },
+        ];
+
+        let productoSeleccionado = null;
+        let variacionSeleccionada = null;
+        let ordenActual = [];
+        let saborSeleccionado = '';
+        let frutaSeleccionada = '';
+        let toppingSeleccionado = '';
+
+        const productosGrid = document.getElementById('productos-grid');
+        const variacionesGrid = document.getElementById('variaciones-grid');
+        const variacionesContainer = document.getElementById('variaciones-container');
+        const crepasContainer = document.getElementById('crepas-container');
+        const cantidadNotasContainer = document.getElementById('cantidad-notas-container');
+        const itemsOrdenDiv = document.getElementById('items-orden');
+
+        // ================== RENDERIZADO DE PRODUCTOS ==================
+        function renderProductos() {
+            productosGrid.innerHTML = '';
+            menu.forEach(prod => {
+                const card = document.createElement('div');
+                card.className = 'producto-card';
+                card.innerHTML = `<span class="emoji">${prod.emoji}</span><span class="producto-nombre">${prod.nombre}</span>`;
+                card.onclick = () => seleccionarProducto(prod, card);
+                productosGrid.appendChild(card);
+            });
+        }
+
+        function seleccionarProducto(prod, card) {
+            document.querySelectorAll('.producto-card').forEach(c => c.classList.remove('seleccionado'));
+            card.classList.add('seleccionado');
+            productoSeleccionado = prod;
+            variacionSeleccionada = null;
+            cantidadNotasContainer.style.display = 'none';
+
+            if (prod.tipo === 'crepas') {
+                variacionesContainer.style.display = 'block';
+                crepasContainer.style.display = 'none';
+                let html = `<h3>Selecciona el tipo de crepa</h3><div class="variaciones-grid">`;
+                prod.especiales.forEach(esp => {
+                    html += `<button class="variacion-btn" onclick="seleccionarCrepaEspecial('${esp}')">${esp}</button>`;
+                });
+                html += `<button class="variacion-btn" style="background:#FFE0B2;" onclick="iniciarCrepaPersonalizada()">Personalizada</button>`;
+                html += `</div>`;
+                variacionesGrid.innerHTML = html;
+                return;
+            }
+
+            crepasContainer.style.display = 'none';
+            if (prod.variaciones && prod.variaciones.length > 0) {
+                renderVariaciones(prod.variaciones);
+                variacionesContainer.style.display = 'block';
+            } else {
+                variacionesContainer.style.display = 'none';
+                cantidadNotasContainer.style.display = 'flex';
+            }
+        }
+
+        function renderVariaciones(variaciones) {
+            variacionesGrid.innerHTML = '';
+            variaciones.forEach(vari => {
+                const btn = document.createElement('button');
+                btn.className = 'variacion-btn';
+                btn.textContent = vari;
+                btn.onclick = () => {
+                    document.querySelectorAll('#variaciones-grid .variacion-btn').forEach(b => b.classList.remove('seleccionado'));
+                    btn.classList.add('seleccionado');
+                    variacionSeleccionada = vari;
+                    cantidadNotasContainer.style.display = 'flex';
+                };
+                variacionesGrid.appendChild(btn);
+            });
+        }
+
+        // ================== LÓGICA DE CREPAS ==================
+        function seleccionarCrepaEspecial(nombreEspecial) {
+            variacionSeleccionada = nombreEspecial;
+            productoSeleccionado = menu.find(p => p.nombre === "Crepas");
+            variacionesContainer.style.display = 'none';
+            crepasContainer.style.display = 'none';
+            cantidadNotasContainer.style.display = 'flex';
+        }
+
+        function iniciarCrepaPersonalizada() {
+            productoSeleccionado = menu.find(p => p.nombre === "Crepas");
+            variacionesContainer.style.display = 'none';
+            crepasContainer.style.display = 'block';
+            saborSeleccionado = frutaSeleccionada = toppingSeleccionado = '';
+            const saboresGrid = document.getElementById('sabores-grid');
+            saboresGrid.innerHTML = '';
+            productoSeleccionado.sabores.forEach(sabor => {
+                const btn = document.createElement('button');
+                btn.className = 'variacion-btn';
+                btn.textContent = sabor;
+                btn.onclick = () => seleccionarSabor(sabor, btn);
+                saboresGrid.appendChild(btn);
+            });
+            document.getElementById('paso-sabor').style.display = 'block';
+            document.getElementById('paso-fruta').style.display = 'none';
+            document.getElementById('paso-topping').style.display = 'none';
+        }
+
+        function seleccionarSabor(sabor, btn) {
+            saborSeleccionado = sabor;
+            document.querySelectorAll('#sabores-grid .variacion-btn').forEach(b => b.classList.remove('seleccionado'));
+            btn.classList.add('seleccionado');
+            document.getElementById('paso-sabor').style.display = 'none';
+            document.getElementById('paso-fruta').style.display = 'block';
+            const frutasGrid = document.getElementById('frutas-grid');
+            frutasGrid.innerHTML = '';
+            productoSeleccionado.frutas.forEach(fruta => {
+                const btnFruta = document.createElement('button');
+                btnFruta.className = 'variacion-btn';
+                btnFruta.textContent = fruta;
+                btnFruta.onclick = () => seleccionarFruta(fruta, btnFruta);
+                frutasGrid.appendChild(btnFruta);
+            });
+        }
+
+        function seleccionarFruta(fruta, btn) {
+            frutaSeleccionada = fruta;
+            document.querySelectorAll('#frutas-grid .variacion-btn').forEach(b => b.classList.remove('seleccionado'));
+            btn.classList.add('seleccionado');
+            document.getElementById('paso-fruta').style.display = 'none';
+            document.getElementById('paso-topping').style.display = 'block';
+            const toppingsGrid = document.getElementById('toppings-grid');
+            toppingsGrid.innerHTML = '';
+            productoSeleccionado.toppings.forEach(topping => {
+                const btnTopping = document.createElement('button');
+                btnTopping.className = 'variacion-btn';
+                btnTopping.textContent = topping;
+                btnTopping.onclick = () => seleccionarTopping(topping, btnTopping);
+                toppingsGrid.appendChild(btnTopping);
+            });
+        }
+
+        function seleccionarTopping(topping, btn) {
+            toppingSeleccionado = topping;
+            variacionSeleccionada = `${saborSeleccionado} + ${frutaSeleccionada} + ${toppingSeleccionado}`;
+            crepasContainer.style.display = 'none';
+            cantidadNotasContainer.style.display = 'flex';
+            saborSeleccionado = frutaSeleccionada = toppingSeleccionado = '';
+        }
+
+        // ================== GESTIÓN DE LA ORDEN ==================
+        function agregarItem() {
+            if (!productoSeleccionado) return alert('Elige un producto');
+            const necesitaVariacion = (productoSeleccionado.tipo === 'crepas' && productoSeleccionado.especiales.length > 0 && !variacionSeleccionada) ||
+                                    (productoSeleccionado.variaciones && productoSeleccionado.variaciones.length > 0 && !variacionSeleccionada);
+            if (necesitaVariacion) return alert('Elige una variación');
+
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            const notas = document.getElementById('notas').value;
+            ordenActual.push({
+                producto: productoSeleccionado.nombre,
+                variacion: variacionSeleccionada || 'Sin variación',
+                cantidad,
+                notas
+            });
+            actualizarOrden();
+            productoSeleccionado = null;
+            variacionSeleccionada = null;
+            document.querySelectorAll('.producto-card').forEach(c => c.classList.remove('seleccionado'));
+            variacionesGrid.innerHTML = '';
+            variacionesContainer.style.display = 'none';
+            crepasContainer.style.display = 'none';
+            cantidadNotasContainer.style.display = 'none';
+            document.getElementById('cantidad').value = 1;
+            document.getElementById('notas').value = '';
+        }
+
+        function actualizarOrden() {
+            if (ordenActual.length === 0) {
+                itemsOrdenDiv.innerHTML = 'No hay productos';
+                document.getElementById('btn-finalizar').disabled = true;
+                return;
+            }
+            document.getElementById('btn-finalizar').disabled = false;
+            let html = '';
+            ordenActual.forEach((item, index) => {
+                html += `<div class="item">
+                    <span>${item.producto}${item.variacion !== 'Sin variación' ? ' - ' + item.variacion : ''} x${item.cantidad}</span>
+                    ${item.notas ? `<small>📝 ${item.notas}</small>` : ''}
+                    <button onclick="eliminarItem(${index})">X</button>
+                </div>`;
+            });
+            itemsOrdenDiv.innerHTML = html;
+        }
+
+        function eliminarItem(index) {
+            ordenActual.splice(index, 1);
+            actualizarOrden();
+        }
+
+        // ================== ENVÍO A SUPABASE ==================
+        async function finalizarPedido() {
+            if (ordenActual.length === 0) return alert('La orden está vacía');
+            try {
+                const batch = Date.now().toString();
+                for (const item of ordenActual) {
+                    const { error } = await supabase
+                        .from('pedidos')
+                        .insert({
+                            producto: item.producto,
+                            variacion: item.variacion,
+                            cantidad: item.cantidad,
+                            notas: item.notas,
+                            estado: 'pendiente',
+                            batch: batch
+                        });
+                    if (error) throw error;
+                }
+                alert('Pedido enviado a cocina');
+                ordenActual = [];
+                actualizarOrden();
+            } catch (error) {
+                alert('Error al enviar: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // ================== COCINA (TIEMPO REAL) ==================
+        // Suscripción a cambios en la tabla pedidos
+        supabase
+            .channel('pedidos-canal')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'pedidos' }, 
+                payload => {
+                    cargarPedidos();
+                }
+            )
+            .subscribe();
+
+        async function cargarPedidos() {
+            const lista = document.getElementById('lista-pedidos');
+            try {
+                const { data: records, error } = await supabase
+                    .from('pedidos')
+                    .select('*')
+                    .or('estado.eq.pendiente,estado.eq.en preparacion')
+                    .order('created_at', { ascending: true });
+                if (error) throw error;
+                lista.innerHTML = '';
+                if (records.length === 0) {
+                    lista.innerHTML = '<p style="text-align:center;color:#999;">Sin pedidos activos</p>';
+                    return;
+                }
+                records.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.className = 'pedido-item';
+                    const desc = rec.producto + (rec.variacion !== 'Sin variación' ? ' - ' + rec.variacion : '');
+                    const claseEstado = rec.estado === 'pendiente' ? 'estado-pendiente' : 'estado-en-preparacion';
+                    const textoEstado = rec.estado === 'pendiente' ? 'Pendiente' : 'En preparación';
+                    let botones = '';
+                    if (rec.estado === 'pendiente') {
+                        botones = `<button class="btn-preparacion" onclick="marcarEnPreparacion('${rec.id}')">En preparación</button>`;
+                    } else {
+                        botones = `<button class="btn-listo" onclick="marcarListo('${rec.id}')">Listo</button>`;
+                    }
+                    li.innerHTML = `
+                        <div class="info">
+                            <span class="numero">Pedido #${rec.id.toString().slice(-4)}</span>
+                            <span class="estado-badge ${claseEstado}">${textoEstado}</span>
+                            <p><strong>${desc}</strong> x${rec.cantidad}</p>
+                            ${rec.notas ? `<div class="notas-aviso">📝 ${rec.notas}</div>` : ''}
+                        </div>
+                        <div class="botones-accion">${botones}</div>
+                    `;
+                    lista.appendChild(li);
+                });
+            } catch (e) { 
+                console.error(e); 
+            }
+        }
+
+        async function marcarEnPreparacion(id) { 
+            const { error } = await supabase.from('pedidos').update({ estado: 'en preparacion' }).eq('id', id);
+            if (error) console.error(error);
+        }
+        async function marcarListo(id) { 
+            const { error } = await supabase.from('pedidos').update({ estado: 'listo' }).eq('id', id);
+            if (error) console.error(error);
+        }
+
+        function mostrarVista(vista) {
+            document.querySelectorAll('.vista').forEach(el => el.classList.remove('activa'));
+            document.getElementById(vista).classList.add('activa');
+        }
+
+        // Inicialización
+        renderProductos();
+        actualizarOrden();
+        cargarPedidos();
+    </script>
+</body>
+</html>
